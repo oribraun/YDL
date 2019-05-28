@@ -281,6 +281,9 @@ app.get('/download-playlist', function(req,res) {
     var dir = '/downloads/' + folder;
     var zipDest = '/lists';
     console.log('dir', dir);
+    if (!fs.existsSync(__dirname + '/downloads/')) {
+        fs.mkdirSync(__dirname + '/downloads/', { recursive: true });
+    }
     if (!fs.existsSync(__dirname + dir)) {
         fs.mkdirSync(__dirname + dir, { recursive: true });
     }
