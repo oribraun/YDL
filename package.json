@@ -30,12 +30,9 @@
     "ffmpeg": "0.0.4",
     "fs-extra": "^8.0.1",
     "jquery": "^3.4.1",
-    "path": "^0.12.7",
     "rxjs": "~6.3.3",
     "socket.io": "^2.2.0",
     "tslib": "^1.9.0",
-    "youtube-dl-progress": "^1.13.3",
-    "ytdl-core": "^0.29.2",
     "zone.js": "~0.8.26"
   },
   "devDependencies": {

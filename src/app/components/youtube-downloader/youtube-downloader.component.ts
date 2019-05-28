@@ -129,17 +129,10 @@ export class YoutubeDownloaderComponent implements OnInit {
     }
 
     onConvertClick(): void {
-        this.startConvertion = true;
-        this.startLoader();
         console.log('URL:' + this.URLinput);
         this.sendURL(this.URLinput);
     }
     sendURL(URL): void {
-        this.list = [];
-        this.startingFetchingList = false;
-        this.listProgress = 0;
-        this.startingZip = false;
-        this.zipProgress = 0;
         if (URL.indexOf('youtube') > -1 && URL.indexOf('?') > -1) {
             const copyUrl = URL.split('?')[0];
             const copyParams = URL.split('?')[1];
@@ -187,6 +180,13 @@ export class YoutubeDownloaderComponent implements OnInit {
     }
 
     downloadList(URL): void {
+        this.startConvertion = true;
+        this.startLoader();
+        this.list = [];
+        this.startingFetchingList = false;
+        this.listProgress = 0;
+        this.startingZip = false;
+        this.zipProgress = 0;
         this.hideModal();
         this.startingFetchingList = true;
         $.ajax({
@@ -234,17 +234,21 @@ export class YoutubeDownloaderComponent implements OnInit {
     }
 
     isScrolledIntoView(el): boolean {
-        const rect = el.getBoundingClientRect();
-        const elemTop = rect.top;
-        const elemBottom = rect.bottom;
+        if (el) {
+            const rect = el.getBoundingClientRect();
+            const elemTop = rect.top;
+            const elemBottom = rect.bottom;
 
-        // Only completely visible elements return true:
-        console.log('elemTop', elemTop);
-        console.log('elemBottom', elemBottom);
-        const isVisible = (elemTop >= 0) && (elemBottom <= window.innerHeight);
-        // Partially visible elements return true:
-        // isVisible = elemTop < window.innerHeight && elemBottom >= 0;
-        return isVisible;
+            // Only completely visible elements return true:
+            console.log('elemTop', elemTop);
+            console.log('elemBottom', elemBottom);
+            const isVisible = (elemTop >= 0) && (elemBottom <= window.innerHeight);
+            // Partially visible elements return true:
+            // isVisible = elemTop < window.innerHeight && elemBottom >= 0;
+            return isVisible;
+        } else {
+            return true;
+        }
     }
 
     scrollToElement(el): void {
