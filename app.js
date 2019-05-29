@@ -93,7 +93,7 @@ app.get('/download-playlist', function(req,res) {
     const options = {};
     const execFileOpts = { maxBuffer: TEN_MEGABYTES };
 
-    var proc = execFile(__dirname + '/src/youtube-dl.exe', args, { ...execFileOpts, ...options }, function done(err, stdout, stderr) {
+    var proc = execFile(__dirname + '/src/youtube-dl.exe', args, { execFileOpts, options }, function done(err, stdout, stderr) {
         if (err) {
             console.error('Error:', err.stack);
             try {
@@ -185,7 +185,7 @@ app.get('/download-playlist', function(req,res) {
         const execFileOpts = { maxBuffer: TEN_MEGABYTES };
         var count = 0;
 
-        var proc = execFile(__dirname + '/src/youtube-dl.exe', args, { ...execFileOpts, ...options }, function done(err, stdout, stderr) {
+        var proc = execFile(__dirname + '/src/youtube-dl.exe', args, { execFileOpts, options }, function done(err, stdout, stderr) {
             if (err) {
                 console.error('Error:', err.stack);
                 console.log('proc.pid', proc.pid);
