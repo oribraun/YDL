@@ -111,7 +111,7 @@ app.get('/download-playlist', function(req,res) {
     });
     sess.proc = proc;
     sess.dir = dir;
-    console.log("sess.proc.pid before", sess.proc.pid)
+    // console.log("sess.proc.pid before", sess.proc.pid)
 
     proc.stderr.on('data', function(data) {
         console.log('err', data);
@@ -207,7 +207,7 @@ app.get('/download-playlist', function(req,res) {
         });
         // console.log("sess.proc.pid before", sess.proc.pid)
         sess.proc = proc;
-        console.log("sess.proc.pid after", sess.proc.pid)
+        // console.log("sess.proc.pid after", sess.proc.pid)
 
         proc.stderr.on('data', function(data) {
             console.log('err', data);
