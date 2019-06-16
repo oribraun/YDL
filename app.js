@@ -6,6 +6,7 @@ var cors = require('cors');
 var archiver = require('archiver');
 var fs = require('fs-extra');
 const execFile = require('child_process').execFile;
+const spawn = require('child_process').spawn;
 var app = express();
 var io = require('socket.io')(3002);
 
@@ -86,14 +87,14 @@ app.get('/download-playlist', function(req,res) {
     // args.push('--get-title');
     // args.push('--get-filename');
     args.push('--skip-download');
-    args.push('--dump-json');
+    args.push('--print-json');
     args.push(URL);
 
     const TEN_MEGABYTES = 1000 * 1000 * 10;
     const options = {};
-    const execFileOpts = { maxBuffer: TEN_MEGABYTES };
+    const execFileOpts = { maxBuffer: Number.MAX_SAFE_INTEGER };
 
-    var proc = execFile(__dirname + '/src/youtube-dl.exe', args, { ...execFileOpts, ...options }, function done(err, stdout, stderr) {
+    var proc = spawn(__dirname + '/src/youtube-dl.exe', args, { execFileOpts, options }, function done(err, stdout, stderr) {
         if (err) {
             console.error('Error:', err.stack);
             try {
@@ -109,6 +110,7 @@ app.get('/download-playlist', function(req,res) {
         // console.log('Success', stdout);
         // console.log('Err', stderr);
     });
+    proc.stdout.setEncoding('utf8');
     sess.proc = proc;
     sess.dir = dir;
     console.log("sess.proc.pid before", sess.proc.pid)
@@ -185,7 +187,7 @@ app.get('/download-playlist', function(req,res) {
         const execFileOpts = { maxBuffer: TEN_MEGABYTES };
         var count = 0;
 
-        var proc = execFile(__dirname + '/src/youtube-dl.exe', args, { ...execFileOpts, ...options }, function done(err, stdout, stderr) {
+        var proc = execFile(__dirname + '/src/youtube-dl.exe', args, { execFileOpts, options }, function done(err, stdout, stderr) {
             if (err) {
                 console.error('Error:', err.stack);
                 console.log('proc.pid', proc.pid);
