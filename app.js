@@ -87,12 +87,12 @@ app.get('/download-playlist', function(req,res) {
     // args.push('--get-title');
     // args.push('--get-filename');
     args.push('--skip-download');
-    args.push('--print-json');
+    args.push('--dump-json');
     args.push(URL);
 
     const TEN_MEGABYTES = 1000 * 1000 * 10;
     const options = {};
-    const execFileOpts = { maxBuffer: Number.MAX_SAFE_INTEGER };
+    const execFileOpts = { maxBuffer: TEN_MEGABYTES };
 
     var proc = spawn(__dirname + '/src/youtube-dl.exe', args, { execFileOpts, options }, function done(err, stdout, stderr) {
         if (err) {
@@ -113,7 +113,7 @@ app.get('/download-playlist', function(req,res) {
     proc.stdout.setEncoding('utf8');
     sess.proc = proc;
     sess.dir = dir;
-    console.log("sess.proc.pid before", sess.proc.pid)
+    // console.log("sess.proc.pid before", sess.proc.pid)
 
     proc.stderr.on('data', function(data) {
         console.log('err', data);
@@ -138,7 +138,7 @@ app.get('/download-playlist', function(req,res) {
     proc.on('close', function(code, signal) {
         console.log('code', code);
         console.log('signal', signal);
-        console.log('execFile closed');
+        console.log('spawn closed');
         if(!signal && !code) {
             delete sess.proc;
             downloadList();
@@ -209,7 +209,7 @@ app.get('/download-playlist', function(req,res) {
         });
         // console.log("sess.proc.pid before", sess.proc.pid)
         sess.proc = proc;
-        console.log("sess.proc.pid after", sess.proc.pid)
+        // console.log("sess.proc.pid after", sess.proc.pid)
 
         proc.stderr.on('data', function(data) {
             console.log('err', data);
