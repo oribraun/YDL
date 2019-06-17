@@ -156,7 +156,7 @@ app.get('/download-playlist', function(req,res) {
             args.push('-f');
             args.push('bestaudio/best');
             args.push('--audio-quality');
-            args.push('0');
+            args.push('5');
             args.push('--audio-format');
             args.push('mp3');
             args.push('--ffmpeg-location');

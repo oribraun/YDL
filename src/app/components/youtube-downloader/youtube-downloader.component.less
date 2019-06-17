@@ -76,3 +76,49 @@ input:focus {
         vertical-align: -webkit-baseline-middle;
     }
 }
+
+.floating-timer {
+    position: fixed;
+    top:5%;
+    left:1%;
+    background:green;
+    background: rgb(26, 188, 156);
+    background: -moz-linear-gradient(-45deg, rgba(4, 133, 255, 1) 0%, rgba(23, 162, 184, 1) 100%);
+    background: -webkit-linear-gradient(-45deg, rgba(4, 133, 255, 1) 0%, rgba(23, 162, 184, 1) 100%);
+    background: linear-gradient(135deg, rgba(4, 133, 255, 1) 0%, rgba(23, 162, 184, 1) 100%);
+    color:#fff;
+    border-radius: 100%;
+    width: 40px;
+    height: 40px;
+    display: table;
+    padding: 18px 10px;
+    display: table;
+    animation: float 4s ease-in-out infinite;
+    .minutes {
+        display: table-cell;
+        vertical-align: middle;
+    }
+    .separator {
+        display: table-cell;
+        vertical-align: middle;
+    }
+    .seconds {
+        display: table-cell;
+        vertical-align: middle;
+    }
+}
+
+@keyframes float {
+    0% {
+        box-shadow: 0 5px 15px 0px rgba(0,0,0,0.6);
+        transform: translatey(0px);
+    }
+    50% {
+        box-shadow: 0 25px 15px 0px rgba(0,0,0,0.2);
+        transform: translatey(-5px);
+    }
+    100% {
+        box-shadow: 0 5px 15px 0px rgba(0,0,0,0.6);
+        transform: translatey(0px);
+    }
+}

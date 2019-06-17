@@ -73,8 +73,14 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" (click)="downloadList(this.copyListUrl)">List</button>
-                <button type="button" class="btn btn-secondary" (click)="downloadList(this.copyVideoUrl)">Video</button>
+                <button type="button" class="btn btn-secondary" (click)="downloadList(this.copyVideoUrl)">1 Video</button>
             </div>
         </div>
     </div>
+</div>
+
+<div class="floating-timer" *ngIf="_showTimer">
+    <div class="minutes">{{timer.minutes}}</div>
+    <div class="separator">:</div>
+    <div class="seconds">{{timer.seconds}}</div>
 </div>

@@ -48,9 +48,19 @@ export class YoutubeDownloaderComponent implements OnInit {
     public type: any = 'mp3';
     public startConvertion: boolean;
     public showLoader: boolean;
+    public timer: any = {
+        minutes: '00',
+        seconds: '00',
+        hours: '00'
+    }
+    public timerInterval: any;
+    public _showTimer: boolean = false;
     constructor() { }
 
     ngOnInit() {
+        window.onbeforeunload = (event) => {
+            event.returnValue = 'if download has started you will loose all your data. do you want to leave?';
+        };
         this.socket = io('http://localhost:3002');
         this.socket.on('set-index', (index) => {
             this.socketIndex = index;
@@ -101,6 +111,7 @@ export class YoutubeDownloaderComponent implements OnInit {
         this.socket.on('zip-end', (progress) => {
             console.log('zip- end*************', progress);
             this.zipProgress = 100;
+            this.stopTimer();
         });
         this.socket.on('download-url', (url) => {
             // window.location.href = url;
@@ -162,6 +173,8 @@ export class YoutubeDownloaderComponent implements OnInit {
         } else {
             alert('cannot detect youtube video or list');
             this.stopLoader();
+            this.stopTimer();
+            this.resetTimer();
         }
         // window.location.href = 'http://localhost:4000/download?URL=' + URL + '&TYPE=' + type.value;
     }
@@ -182,6 +195,10 @@ export class YoutubeDownloaderComponent implements OnInit {
     downloadList(URL): void {
         this.startConvertion = true;
         this.startLoader();
+        this.stopTimer();
+        this.resetTimer();
+        this.startTimer();
+        this.showTimer();
         this.list = [];
         this.startingFetchingList = false;
         this.listProgress = 0;
@@ -231,6 +248,9 @@ export class YoutubeDownloaderComponent implements OnInit {
         this.startingZip = false;
         this.zipProgress = 0;
         this.stopLoader();
+        this.stopTimer();
+        this.resetTimer();
+        this.hideTimer();
     }
 
     isScrolledIntoView(el): boolean {
@@ -264,6 +284,43 @@ export class YoutubeDownloaderComponent implements OnInit {
         link.download = filePath.substr(filePath.lastIndexOf('/') + 1);
         link.click();
         link.remove();
+    }
+
+    startTimer() {
+        let seconds = 0;
+        let minutes = 0;
+        let hours = 0;
+        this.timerInterval = setInterval(() => {
+            seconds++;
+            if (seconds % 60 === 0) {
+                seconds = 0;
+                minutes++;
+            }
+            if (minutes % 60 === 0) {
+                minutes = 0;
+                hours++;
+            }
+            this.calcTimer(seconds, minutes, hours);
+        }, 1000);
+    }
+    calcTimer(seconds, minutes, hours) {
+        this.timer.seconds = seconds < 10 ? '0' + seconds : seconds;
+        this.timer.minutes = minutes < 10 ? '0' + minutes : minutes;
+        this.timer.hours = hours < 10 ? '0' + hours : hours;
+    }
+    stopTimer() {
+        clearInterval(this.timerInterval);
+    }
+    resetTimer() {
+        this.timer.minutes = '00';
+        this.timer.seconds = '00';
+        this.timer.hours = '00';
+    }
+    showTimer() {
+        this._showTimer = true;
+    }
+    hideTimer() {
+        this._showTimer = false;
     }
 
 }
