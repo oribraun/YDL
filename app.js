@@ -162,7 +162,8 @@ app.get('/download-playlist', function(req,res) {
             args.push('--ffmpeg-location');
             args.push(__dirname + '/src/ffmpeg.exe');
             args.push('-o');
-            args.push(dir + '/%(title)s.' + TYPE);
+            // args.push(dir + '/%(title)s.' + TYPE);
+            args.push(dir + '/%(title)s.%(ext)s');
         }
         if(TYPE === 'mp4') {
             // args.push('-f');
