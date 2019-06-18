@@ -7,6 +7,7 @@ var archiver = require('archiver');
 var fs = require('fs-extra');
 const execFile = require('child_process').execFile;
 const spawn = require('child_process').spawn;
+const exec = require('child_process').exec;
 var app = express();
 var io = require('socket.io')(3002);
 
@@ -92,7 +93,7 @@ app.get('/download-playlist', function(req,res) {
 
     const TEN_MEGABYTES = 1000 * 1000 * 10;
     const options = {};
-    const execFileOpts = { maxBuffer: TEN_MEGABYTES };
+    const execFileOpts = { encoding: 'utf8' ,maxBuffer: TEN_MEGABYTES };
 
     var proc = spawn(__dirname + '/src/youtube-dl.exe', args, { execFileOpts, options }, function done(err, stdout, stderr) {
         if (err) {
@@ -116,7 +117,7 @@ app.get('/download-playlist', function(req,res) {
     // console.log("sess.proc.pid before", sess.proc.pid)
 
     proc.stderr.on('data', function(data) {
-        console.log('err', data);
+        console.log('err', data.toString('utf8'));
         // process.stderr.write(data);
     });
     proc.stdout.on('data', function(data) {
@@ -164,6 +165,17 @@ app.get('/download-playlist', function(req,res) {
             args.push('-o');
             // args.push(dir + '/%(title)s.' + TYPE);
             args.push(dir + '/%(title)s.%(ext)s');
+
+            // args.push('-i');
+            // args.push('-f');
+            // args.push('best');
+            // args.push('--recode-video');
+            // args.push('mp4');
+            // args.push('--encoding');
+            // args.push('utf8');
+            // args.push('-o');
+            //
+            // args.push(dir + '/%(title)s.%(ext)s');
         }
         if(TYPE === 'mp4') {
             // args.push('-f');
@@ -185,7 +197,7 @@ app.get('/download-playlist', function(req,res) {
 
         const TEN_MEGABYTES = 1000 * 1000 * 10;
         const options = {};
-        const execFileOpts = { maxBuffer: TEN_MEGABYTES };
+        const execFileOpts = { encoding: 'utf8' ,maxBuffer: TEN_MEGABYTES };
         var count = 0;
 
         var proc = execFile(__dirname + '/src/youtube-dl.exe', args, { execFileOpts, options }, function done(err, stdout, stderr) {
@@ -213,7 +225,7 @@ app.get('/download-playlist', function(req,res) {
         // console.log("sess.proc.pid after", sess.proc.pid)
 
         proc.stderr.on('data', function(data) {
-            console.log('err', data);
+            console.log('err', data.toString('utf8'));
             // process.stderr.write(data);
         });
         proc.stdout.on('data', function(data) {
@@ -258,6 +270,76 @@ app.get('/download-playlist', function(req,res) {
         });
     }
 
+    function convertFilesToMp3(dir) {
+        var args = [];
+        var options = {};
+        var command = 'FOR %G IN ("' + __dirname + dir + '/*.*") DO ' + __dirname + '/src/ffmpeg.exe' + ' -i "' + __dirname + dir + '/%~nxG" -f mp3 -ab 192000 -vn -y "' + __dirname + dir + '/%~nG.mp3"';
+        var proc = exec(command, (err, stdout, stderr) => {
+            if (err) {
+                console.error('Error:', err.stack);
+                console.log('proc.pid', proc.pid);
+
+                try {
+                    proc.kill('SIGINT');
+                    fs.removeSync(__dirname + sess.dir);
+                    delete sess.proc;
+                    delete sess.dir;
+                } catch(e) {
+                    console.log('e', e);
+                }
+                // throw err;
+            } else {
+                // createZip(dir);
+            }
+            // console.log('Success', stdout);
+            // console.log('Err', stderr);
+        });
+        sess.proc = proc;
+        proc.stderr.on('data', function(data) {
+            console.log('err', data.toString('utf8'));
+            // process.stderr.write(data);
+        });
+        proc.stdout.on('data', function(data) {
+            const re = /[0-9]+((\.[0-9]{1}){0,1})%/i;
+            const matches = data.match(re);
+            if (matches && matches.length && matches.length > 0) {
+                // Prints the percentage.
+                console.log('matches[0]',matches[0]);
+            }
+            // var data = JSON.parse(data);
+            if(data.indexOf('[download] Destination') > -1) {
+                count++;
+            }
+            console.log('data', data);
+            if(data.indexOf('%') > -1) {
+                var percent = Math.ceil(data.substr(data.indexOf(' ') + 1,data.length - (data.length - data.indexOf('%') + 1) - data.indexOf(' ')))
+                console.log('percent',percent)
+                console.log('count',count)
+                io.to(sockets[socketIndex]).emit('item-progress', percent, count);
+            } else {
+                // waiting
+            }
+            // var percent = (data.playlist_index / data.n_entries * 100);
+            // var percent = Math.ceil((pos / size * 100));
+            // process.stdout.cursorTo(0);
+            // process.stdout.clearLine(1);
+            // process.stdout.write(percent + '%');
+            // io.to(sockets[socketIndex]).emit('item-progress', percent, count);
+            // process.stdout.write(data);
+        });
+        proc.on('close', function(code, signal) {
+            console.log('code', code);
+            console.log('signal', signal);
+            console.log('execFile closed');
+            if(!signal && !code) {
+                delete sess.proc;
+                createZip(dir);
+            }
+            if(code) {
+                io.to(sockets[socketIndex]).emit('failed', 'process failed');
+            }
+        });
+    }
 
     function createZip(dir) {
         io.to(sockets[socketIndex]).emit('starting-zip');
