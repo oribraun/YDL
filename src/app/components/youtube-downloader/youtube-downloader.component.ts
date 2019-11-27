@@ -61,7 +61,7 @@ export class YoutubeDownloaderComponent implements OnInit {
         window.onbeforeunload = (event) => {
             event.returnValue = 'if download has started you will loose all your data. do you want to leave?';
         };
-        this.socket = io('http://localhost:3002');
+        this.socket = io(window.location.protocol + '//' + window.location.hostname + ':3002');
         this.socket.on('set-index', (index) => {
             this.socketIndex = index;
         });
@@ -207,7 +207,7 @@ export class YoutubeDownloaderComponent implements OnInit {
         this.hideModal();
         this.startingFetchingList = true;
         $.ajax({
-            url: 'http://localhost:4000/download-playlist',
+            url: window.location.href + 'download-playlist',
             type: 'get',
             data: {URL: URL, TYPE: this.type, sIndex: this.socketIndex},
             success: (res) => {

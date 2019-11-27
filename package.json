@@ -6,7 +6,7 @@
     "start": "ng serve",
     "start-server": "node app.js",
     "build": "ng build",
-    "build-prod": "ng build --prod --aot --output-hashing none --deploy-url dist/",
+    "build-prod": "ng build --prod --aot --output-hashing none --deploy-url /dist/",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
@@ -26,6 +26,7 @@
     "child_process": "^1.0.2",
     "core-js": "^2.5.4",
     "cors": "^2.8.5",
+    "cron": "^1.7.2",
     "express": "^4.16.4",
     "express-session": "^1.16.1",
     "ffmpeg": "0.0.4",

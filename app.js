@@ -10,6 +10,7 @@ const spawn = require('child_process').spawn;
 const exec = require('child_process').exec;
 var app = express();
 var io = require('socket.io')(3002);
+var CronJob = require('cron').CronJob;
 
 
 app.set('trust proxy', 1)
@@ -95,7 +96,7 @@ app.get('/download-playlist', function(req,res) {
     const options = {};
     const execFileOpts = { encoding: 'utf8' ,maxBuffer: TEN_MEGABYTES };
 
-    var proc = spawn(__dirname + '/src/youtube-dl.exe', args, { execFileOpts, options }, function done(err, stdout, stderr) {
+    var proc = spawn(__dirname + '/youtube-dl.exe', args, { execFileOpts, options }, function done(err, stdout, stderr) {
         if (err) {
             console.error('Error:', err.stack);
             try {
@@ -200,7 +201,7 @@ app.get('/download-playlist', function(req,res) {
         const execFileOpts = { encoding: 'utf8' ,maxBuffer: TEN_MEGABYTES };
         var count = 0;
 
-        var proc = execFile(__dirname + '/src/youtube-dl.exe', args, { execFileOpts, options }, function done(err, stdout, stderr) {
+        var proc = execFile(__dirname + '/youtube-dl.exe', args, { execFileOpts, options }, function done(err, stdout, stderr) {
             if (err) {
                 console.error('Error:', err.stack);
                 console.log('proc.pid', proc.pid);
@@ -398,5 +399,53 @@ app.get('/download-playlist', function(req,res) {
         archive.finalize();
     }
 
-    res.json({});
+    // res.json({});
 });
+
+function startCron() {
+  var downloadFolder = __dirname + '/downloads/';
+  var zipFolder = __dirname + '/lists/';
+  new CronJob('0 0 * * *', function() {
+    if (fs.existsSync(downloadFolder)) {
+      fs.readdir(downloadFolder, (err, files) => {
+        files.forEach(file => {
+          fs.stat(downloadFolder + file, function(err, stats){
+            let seconds = Math.ceil((new Date().getTime() - stats.mtime) / 1000);
+            var days = Math.floor(seconds / (3600*24));
+            seconds  -= days*3600*24;
+            var hrs   = Math.floor(seconds / 3600);
+            seconds  -= hrs*3600;
+            var mnts = Math.floor(seconds / 60);
+            seconds  -= mnts*60;
+            // console.log(days+" days, "+hrs+" Hrs, "+mnts+" Minutes, "+seconds+" Seconds");
+            // console.log(`File modified ${seconds} seconds ago`);
+            if(days > 2) {
+              fs.removeSync(downloadFolder + file);
+            }
+          });
+        });
+      });
+    }
+    if (fs.existsSync(zipFolder)) {
+      fs.readdir(zipFolder, (err, files) => {
+        files.forEach(file => {
+          fs.stat(zipFolder + file, function(err, stats){
+            let seconds = Math.ceil((new Date().getTime() - stats.mtime) / 1000);
+            var days = Math.floor(seconds / (3600*24));
+            seconds  -= days*3600*24;
+            var hrs   = Math.floor(seconds / 3600);
+            seconds  -= hrs*3600;
+            var mnts = Math.floor(seconds / 60);
+            seconds  -= mnts*60;
+            // console.log(days+" days, "+hrs+" Hrs, "+mnts+" Minutes, "+seconds+" Seconds");
+            // console.log(`File modified ${seconds} seconds ago`);
+            if(days > 2) {
+              fs.removeSync(zipFolder + file);
+            }
+          });
+        });
+      });
+    }
+  }, null, true, 'America/Los_Angeles');
+}
+startCron();
