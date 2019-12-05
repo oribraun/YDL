@@ -12,7 +12,7 @@ var app = express();
 var io = require('socket.io')(3002);
 var CronJob = require('cron').CronJob;
 var isWin = process.platform === "win32";
-
+var port = process.env.PORT || 4000;
 var youtube_dl = isWin ? '/youtube-dl.exe' : '/youtube-dl'
 
 
@@ -24,8 +24,8 @@ app.use(session({
     cookie: { secure: false, maxAge: 1000*60*60*24 }
 }))
 app.use(cors());
-app.listen(4000, function() {
-    console.log('Server Works !!! At port 4000');
+app.listen(port, function() {
+    console.log('Server Works !!! At port ' + port);
 });
 app.use("/lists", express.static(__dirname + '/lists'));
 app.use("/dist", express.static(__dirname + '/dist'));
