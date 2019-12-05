@@ -6,7 +6,7 @@
     "start": "ng serve",
     "start-server": "node app.js",
     "build": "ng build --aot --output-hashing none --deploy-url /dist/",
-    "postinstall": "ng build --aot --output-hashing none --deploy-url /dist/",
+    "postinstall": "ng build --aot --output-hashing none --deploy-url /dist/ && node app.js",
     "build-prod": "ng build --prod --aot --output-hashing none --deploy-url /dist/",
     "test": "ng test",
     "lint": "ng lint",

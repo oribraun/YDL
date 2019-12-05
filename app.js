@@ -13,7 +13,7 @@ var io = require('socket.io')(3002);
 var CronJob = require('cron').CronJob;
 var isWin = process.platform === "win32";
 var port = process.env.PORT || 4000;
-var youtube_dl = isWin ? '/youtube-dl.exe' : '/youtube-dl'
+var youtube_dl = isWin ? '/youtube-dl.exe' : '/youtube-dl';
 
 
 app.set('trust proxy', 1)
@@ -99,7 +99,7 @@ app.get('/download-playlist', function(req,res) {
     const options = {};
     const execFileOpts = { encoding: 'utf8' ,maxBuffer: TEN_MEGABYTES };
 
-    var proc = spawn(__dirname + '/youtube-dl.exe', args, { execFileOpts, options }, function done(err, stdout, stderr) {
+    var proc = spawn(__dirname + youtube_dl, args, { execFileOpts, options }, function done(err, stdout, stderr) {
         if (err) {
             console.error('Error:', err.stack);
             try {
@@ -207,7 +207,7 @@ app.get('/download-playlist', function(req,res) {
         var current_temp_file_name = '';
         var failedFiles = [];
 
-        var proc = spawn(__dirname + '/youtube-dl.exe', args, { execFileOpts, options }, function done(err, stdout, stderr) {
+        var proc = spawn(__dirname + youtube_dl, args, { execFileOpts, options }, function done(err, stdout, stderr) {
             if (err) {
                 console.error('Error:', err.stack);
                 console.log('proc.pid', proc.pid);
