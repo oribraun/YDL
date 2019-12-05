@@ -39,8 +39,11 @@
                         </div>
                     </div>
                     <div class="col-1">
-                        <div class="success" *ngIf="listItem.progress >= 100">
+                        <div class="success" *ngIf="listItem.progress >= 100 && !listItem.failed">
                             <app-success-icon type="success"></app-success-icon>
+                        </div>
+                        <div class="failed" *ngIf="listItem.failed">
+                            <app-success-icon type="error"></app-success-icon>
                         </div>
                     </div>
                 </div>

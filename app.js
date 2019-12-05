@@ -11,6 +11,9 @@ const exec = require('child_process').exec;
 var app = express();
 var io = require('socket.io')(3002);
 var CronJob = require('cron').CronJob;
+var isWin = process.platform === "win32";
+
+var youtube_dl = isWin ? '/youtube-dl.exe' : '/youtube-dl'
 
 
 app.set('trust proxy', 1)
@@ -154,6 +157,7 @@ app.get('/download-playlist', function(req,res) {
         console.log('start-downloading-list');
         var args = [];
         if(TYPE === 'mp3') {
+            args.push('-i');
             args.push('-x');
             args.push('-f');
             args.push('bestaudio/best');
@@ -200,12 +204,13 @@ app.get('/download-playlist', function(req,res) {
         const options = {};
         const execFileOpts = { encoding: 'utf8' ,maxBuffer: TEN_MEGABYTES };
         var count = 0;
+        var current_temp_file_name = '';
+        var failedFiles = [];
 
-        var proc = execFile(__dirname + '/youtube-dl.exe', args, { execFileOpts, options }, function done(err, stdout, stderr) {
+        var proc = spawn(__dirname + '/youtube-dl.exe', args, { execFileOpts, options }, function done(err, stdout, stderr) {
             if (err) {
                 console.error('Error:', err.stack);
                 console.log('proc.pid', proc.pid);
-
                 try {
                     proc.kill('SIGINT');
                     fs.removeSync(__dirname + sess.dir);
@@ -215,18 +220,19 @@ app.get('/download-playlist', function(req,res) {
                     console.log('e', e);
                 }
                 // throw err;
-            } else {
-                // createZip(dir);
             }
             // console.log('Success', stdout);
             // console.log('Err', stderr);
         });
         // console.log("sess.proc.pid before", sess.proc.pid)
+        proc.stdout.setEncoding('utf8');
         sess.proc = proc;
         // console.log("sess.proc.pid after", sess.proc.pid)
 
         proc.stderr.on('data', function(data) {
             console.log('err', data.toString('utf8'));
+            failedFiles.push(current_temp_file_name);
+            io.to(sockets[socketIndex]).emit('item-failed', count);
             // process.stderr.write(data);
         });
         proc.stdout.on('data', function(data) {
@@ -238,6 +244,9 @@ app.get('/download-playlist', function(req,res) {
             }
             // var data = JSON.parse(data);
             if(data.indexOf('[download] Destination') > -1) {
+                current_temp_file_name = data.substr(data.indexOf(folder) + folder.length + 1).trim();
+                // console.log('current_temp_file_name', current_temp_file_name)
+                // console.log('dir', dir)
                 count++;
             }
             console.log('data', data);
@@ -261,13 +270,14 @@ app.get('/download-playlist', function(req,res) {
             console.log('code', code);
             console.log('signal', signal);
             console.log('execFile closed');
-            if(!signal && !code) {
+            if(!signal) {
                 delete sess.proc;
+                removeFailedFiles(dir, failedFiles);
                 createZip(dir);
             }
-            if(code) {
-                io.to(sockets[socketIndex]).emit('failed', 'process failed');
-            }
+            // if(code) {
+            //     io.to(sockets[socketIndex]).emit('failed', 'process failed');
+            // }
         });
     }
 
@@ -399,53 +409,70 @@ app.get('/download-playlist', function(req,res) {
         archive.finalize();
     }
 
-    // res.json({});
+    function removeFailedFiles(dir, failedFiles) {
+        if(failedFiles.length) {
+            if (fs.existsSync(__dirname + dir)) {
+                fs.readdir(__dirname + dir, (err, files) => {
+                    files.forEach(file => {
+                        for(var i in failedFiles) {
+                            if (file.includes(failedFiles[i].trim())) {
+                                console.log('deleting file', file)
+                                fs.unlink(__dirname + dir + '/' + file);
+                            }
+                        }
+                    })
+                })
+            }
+        }
+    }
+
+    res.json({});
 });
 
 function startCron() {
-  var downloadFolder = __dirname + '/downloads/';
-  var zipFolder = __dirname + '/lists/';
-  new CronJob('0 0 * * *', function() {
-    if (fs.existsSync(downloadFolder)) {
-      fs.readdir(downloadFolder, (err, files) => {
-        files.forEach(file => {
-          fs.stat(downloadFolder + file, function(err, stats){
-            let seconds = Math.ceil((new Date().getTime() - stats.mtime) / 1000);
-            var days = Math.floor(seconds / (3600*24));
-            seconds  -= days*3600*24;
-            var hrs   = Math.floor(seconds / 3600);
-            seconds  -= hrs*3600;
-            var mnts = Math.floor(seconds / 60);
-            seconds  -= mnts*60;
-            // console.log(days+" days, "+hrs+" Hrs, "+mnts+" Minutes, "+seconds+" Seconds");
-            // console.log(`File modified ${seconds} seconds ago`);
-            if(days > 2) {
-              fs.removeSync(downloadFolder + file);
-            }
-          });
-        });
-      });
-    }
-    if (fs.existsSync(zipFolder)) {
-      fs.readdir(zipFolder, (err, files) => {
-        files.forEach(file => {
-          fs.stat(zipFolder + file, function(err, stats){
-            let seconds = Math.ceil((new Date().getTime() - stats.mtime) / 1000);
-            var days = Math.floor(seconds / (3600*24));
-            seconds  -= days*3600*24;
-            var hrs   = Math.floor(seconds / 3600);
-            seconds  -= hrs*3600;
-            var mnts = Math.floor(seconds / 60);
-            seconds  -= mnts*60;
-            // console.log(days+" days, "+hrs+" Hrs, "+mnts+" Minutes, "+seconds+" Seconds");
-            // console.log(`File modified ${seconds} seconds ago`);
-            if(days > 2) {
-              fs.removeSync(zipFolder + file);
-            }
-          });
-        });
-      });
-    }
-  }, null, true, 'America/Los_Angeles');
+    var downloadFolder = __dirname + '/downloads/';
+    var zipFolder = __dirname + '/lists/';
+    new CronJob('0 0 * * *', function() {
+        if (fs.existsSync(downloadFolder)) {
+            fs.readdir(downloadFolder, (err, files) => {
+                files.forEach(file => {
+                    fs.stat(downloadFolder + file, function(err, stats){
+                        let seconds = Math.ceil((new Date().getTime() - stats.mtime) / 1000);
+                        var days = Math.floor(seconds / (3600*24));
+                        seconds  -= days*3600*24;
+                        var hrs   = Math.floor(seconds / 3600);
+                        seconds  -= hrs*3600;
+                        var mnts = Math.floor(seconds / 60);
+                        seconds  -= mnts*60;
+                        // console.log(days+" days, "+hrs+" Hrs, "+mnts+" Minutes, "+seconds+" Seconds");
+                        // console.log(`File modified ${seconds} seconds ago`);
+                        if(days > 2) {
+                            fs.removeSync(downloadFolder + file);
+                        }
+                    });
+                });
+            });
+        }
+        if (fs.existsSync(zipFolder)) {
+            fs.readdir(zipFolder, (err, files) => {
+                files.forEach(file => {
+                    fs.stat(zipFolder + file, function(err, stats){
+                        let seconds = Math.ceil((new Date().getTime() - stats.mtime) / 1000);
+                        var days = Math.floor(seconds / (3600*24));
+                        seconds  -= days*3600*24;
+                        var hrs   = Math.floor(seconds / 3600);
+                        seconds  -= hrs*3600;
+                        var mnts = Math.floor(seconds / 60);
+                        seconds  -= mnts*60;
+                        // console.log(days+" days, "+hrs+" Hrs, "+mnts+" Minutes, "+seconds+" Seconds");
+                        // console.log(`File modified ${seconds} seconds ago`);
+                        if(days > 2) {
+                            fs.removeSync(zipFolder + file);
+                        }
+                    });
+                });
+            });
+        }
+    }, null, true, 'America/Los_Angeles');
 }
 startCron();

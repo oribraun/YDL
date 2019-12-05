@@ -77,6 +77,7 @@ export class YoutubeDownloaderComponent implements OnInit {
             this.list.push(
                 {
                     progress: 0,
+                    failed: false,
                     youtubeUrl: youtubeUrl,
                     thumbnail: thumbnail,
                     title: title,
@@ -95,6 +96,17 @@ export class YoutubeDownloaderComponent implements OnInit {
                 this.scrollToElement(ele);
             }
             this.updateItemProgress(index, progress);
+        });
+        this.socket.on('item-failed', (index, chunkData) => {
+            console.log('index', index);
+            console.log('item-failed*************');
+            console.log('this.list.length', this.list.length);
+            const ele = $('.item-' + (index - 1))[0];
+            console.log('this.isScrolledIntoView(ele)', this.isScrolledIntoView(ele));
+            if (!this.isScrolledIntoView(ele)) {
+                this.scrollToElement(ele);
+            }
+            this.setItemAsFailed(index);
         });
         this.socket.on('starting-zip', () => {
             console.log('zip- start*************', );
@@ -135,6 +147,14 @@ export class YoutubeDownloaderComponent implements OnInit {
         requestAnimationFrame(() => {
             if (this.list[index - 1]) {
                 this.list[index - 1].progress = progress;
+            }
+        });
+    }
+    setItemAsFailed(index) {
+        requestAnimationFrame(() => {
+            if (this.list[index - 1]) {
+                // this.list[index - 1].progress = 0;
+                this.list[index - 1].failed = true;
             }
         });
     }
