@@ -61,7 +61,8 @@ export class YoutubeDownloaderComponent implements OnInit {
         window.onbeforeunload = (event) => {
             event.returnValue = 'if download has started you will loose all your data. do you want to leave?';
         };
-        this.socket = io(window.location.protocol + '//' + window.location.hostname + ':3002');
+        // this.socket = io(window.location.protocol + '//' + window.location.hostname + ':3002');
+        this.socket = io();
         this.socket.on('set-index', (index) => {
             this.socketIndex = index;
         });

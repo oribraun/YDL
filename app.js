@@ -9,7 +9,8 @@ const execFile = require('child_process').execFile;
 const spawn = require('child_process').spawn;
 const exec = require('child_process').exec;
 var app = express();
-var io = require('socket.io')(3002);
+var http = require('http').createServer(app);
+var io = require('socket.io')(http);
 var CronJob = require('cron').CronJob;
 var isWin = process.platform === "win32";
 var port = process.env.PORT || 4000;
@@ -24,7 +25,7 @@ app.use(session({
     cookie: { secure: false, maxAge: 1000*60*60*24 }
 }))
 app.use(cors());
-app.listen(port, function() {
+http.listen(port, function() {
     console.log('Server Works !!! At port ' + port);
 });
 app.use("/lists", express.static(__dirname + '/lists'));
