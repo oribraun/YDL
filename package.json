@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "node app.js",
+    "serve": "ng serve",
     "start-server": "node app.js",
     "build": "ng build --aot --output-hashing none --deploy-url /dist/",
     "postinstall": "ng build --aot --output-hashing none --deploy-url /dist/",
