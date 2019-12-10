@@ -15,6 +15,7 @@ var CronJob = require('cron').CronJob;
 var isWin = process.platform === "win32";
 var port = process.env.PORT || 4000;
 var youtube_dl = isWin ? '/youtube-dl.exe' : '/youtube-dl';
+var ffmpeg = isWin ? '/src/ffmpeg.exe' : '/src/ffmpeg';
 
 
 app.set('trust proxy', 1)
@@ -167,7 +168,7 @@ app.get('/download-playlist', function(req,res) {
             args.push('--audio-format');
             args.push('mp3');
             args.push('--ffmpeg-location');
-            args.push(__dirname + '/src/ffmpeg.exe');
+            args.push(__dirname + ffmpeg);
             args.push('-o');
             // args.push(dir + '/%(title)s.' + TYPE);
             args.push(dir + '/%(title)s.%(ext)s');
