@@ -15,7 +15,7 @@ var CronJob = require('cron').CronJob;
 var isWin = process.platform === "win32";
 var port = process.env.PORT || 4000;
 var youtube_dl = isWin ? '/youtube-dl.exe' : '/youtube-dl';
-var ffmpeg = isWin ? '/src/ffmpeg.exe' : '/src/ffmpeg';
+var ffmpeg = isWin ? '/ffmpeg.exe' : '/ffmpeg';
 
 
 app.set('trust proxy', 1)
