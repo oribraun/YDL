@@ -14,8 +14,9 @@ var io = require('socket.io')(http);
 var CronJob = require('cron').CronJob;
 var isWin = process.platform === "win32";
 var port = process.env.PORT || 4000;
-var youtube_dl = isWin ? '/youtube-dl.exe' : '/youtube-dl';
-var ffmpeg = isWin ? '/ffmpeg.exe' : '/ffmpeg';
+var youtube_dl = isWin ? '/youtube-dl.exe' : '/_youtube-dl';
+var ffmpeg = isWin ? '/ffmpeg.exe' : '/_ffmpeg';
+var downloadDir = '/../tmp/';
 
 
 app.set('trust proxy', 1)
@@ -66,11 +67,11 @@ app.get('/download-playlist', function(req,res) {
     var total;
     var listId = URL.split("list=")[1];
     var folder =  sess.id + (listId ? '-' + listId : '');
-    var dir = '/downloads/' + folder;
+    var dir = downloadDir + folder;
     var zipDest = '/lists';
     console.log('dir', dir);
-    if (!fs.existsSync(__dirname + '/downloads/')) {
-        fs.mkdirSync(__dirname + '/downloads/', { recursive: true });
+    if (!fs.existsSync(__dirname + downloadDir)) {
+        fs.mkdirSync(__dirname + downloadDir, { recursive: true });
     }
     if (!fs.existsSync(__dirname + dir)) {
         fs.mkdirSync(__dirname + dir, { recursive: true });
@@ -158,6 +159,7 @@ app.get('/download-playlist', function(req,res) {
     function downloadList() {
         console.log('start-downloading-list');
         var args = [];
+        console.log('__dirname + ffmpeg', __dirname + ffmpeg)
         if(TYPE === 'mp3') {
             args.push('-i');
             args.push('-x');
@@ -171,7 +173,7 @@ app.get('/download-playlist', function(req,res) {
             args.push(__dirname + ffmpeg);
             args.push('-o');
             // args.push(dir + '/%(title)s.' + TYPE);
-            args.push(dir + '/%(title)s.%(ext)s');
+            args.push(__dirname + dir + '/%(title)s.%(ext)s');
 
             // args.push('-i');
             // args.push('-f');
@@ -197,7 +199,7 @@ app.get('/download-playlist', function(req,res) {
             args.push('--encoding');
             args.push('utf8');
             args.push('-o');
-            args.push(dir + '/%(title)s.' + TYPE);
+            args.push(__dirname + dir + '/%(title)s.' + TYPE);
         }
 
         args.push(URL);
@@ -432,7 +434,7 @@ app.get('/download-playlist', function(req,res) {
 });
 
 function startCron() {
-    var downloadFolder = __dirname + '/downloads/';
+    var downloadFolder = __dirname + downloadDir;
     var zipFolder = __dirname + '/lists/';
     new CronJob('0 0 * * *', function() {
         if (fs.existsSync(downloadFolder)) {
