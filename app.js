@@ -101,7 +101,6 @@ app.get('/download-playlist', function(req,res) {
     const options = {};
     const execFileOpts = { encoding: 'utf8' ,maxBuffer: TEN_MEGABYTES };
 
-    console.log('__dirname + youtube_dl', __dirname + youtube_dl)
     var proc = spawn(__dirname + youtube_dl, args, { execFileOpts, options }, function done(err, stdout, stderr) {
         if (err) {
             console.error('Error:', err.stack);
