@@ -14,8 +14,8 @@ var io = require('socket.io')(http);
 var CronJob = require('cron').CronJob;
 var isWin = process.platform === "win32";
 var port = process.env.PORT || 4000;
-var youtube_dl = isWin ? '/youtube-dl.exe' : '/_youtube-dl';
-var ffmpeg = isWin ? '/ffmpeg.exe' : '/_ffmpeg';
+var youtube_dl = isWin ? '/windows/youtube-dl.exe' : '/linux/youtube-dl';
+var ffmpeg = isWin ? '/windows/ffmpeg.exe' : '/linux/ffmpeg';
 var downloadDir = '/../tmp/';
 
 
