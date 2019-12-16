@@ -58,9 +58,6 @@ export class YoutubeDownloaderComponent implements OnInit {
     constructor() { }
 
     ngOnInit() {
-        window.onbeforeunload = (event) => {
-            event.returnValue = 'if download has started you will loose all your data. do you want to leave?';
-        };
         // this.socket = io(window.location.protocol + '//' + window.location.hostname + ':3002');
         this.socket = io();
         this.socket.on('set-index', (index) => {
@@ -128,6 +125,7 @@ export class YoutubeDownloaderComponent implements OnInit {
         });
         this.socket.on('download-url', (url) => {
             // window.location.href = url;
+            this.unSetOnBeforeUnloadEvent();
             this.startDownload(url);
         });
         this.socket.on('failed', (err) => {
@@ -220,6 +218,7 @@ export class YoutubeDownloaderComponent implements OnInit {
         this.resetTimer();
         this.startTimer();
         this.showTimer();
+        this.setOnBeforeUnloadEvent();
         this.list = [];
         this.startingFetchingList = false;
         this.listProgress = 0;
@@ -272,6 +271,7 @@ export class YoutubeDownloaderComponent implements OnInit {
         this.stopTimer();
         this.resetTimer();
         this.hideTimer();
+        this.unSetOnBeforeUnloadEvent();
     }
 
     isScrolledIntoView(el): boolean {
@@ -302,7 +302,7 @@ export class YoutubeDownloaderComponent implements OnInit {
     startDownload(filePath): void {
         const link = document.createElement('a');
         link.href = filePath;
-        link.target = '_blank';
+        // link.target = '_blank';
         link.download = filePath.substr(filePath.lastIndexOf('/') + 1);
         link.click();
         link.remove();
@@ -343,6 +343,14 @@ export class YoutubeDownloaderComponent implements OnInit {
     }
     hideTimer() {
         this._showTimer = false;
+    }
+    setOnBeforeUnloadEvent() {
+        window.onbeforeunload = (event) => {
+            event.returnValue = 'if download has started you will loose all your data. do you want to leave?';
+        };
+    }
+    unSetOnBeforeUnloadEvent() {
+        window.onbeforeunload = (event) => {};
     }
 
 }
