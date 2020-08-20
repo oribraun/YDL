@@ -19,7 +19,7 @@ var ffmpeg = isWin ? '/windows/ffmpeg.exe' : '/linux/ffmpeg';
 var downloadDir = '/../tmp/';
 
 
-app.set('trust proxy', 1)
+app.set('trust proxy', 1);
 app.use(session({
     secret: 'keyboard cat',
     resave: false,
@@ -247,7 +247,7 @@ app.get('/download-playlist', function(req,res) {
                 console.log('matches[0]',matches[0]);
             }
             // var data = JSON.parse(data);
-            if(data.indexOf('Downloading video info webpage') > -1) {
+            if(data.indexOf('Downloading video info webpage') > -1 || data.indexOf('[download] Downloading video') > -1) {
                 current_temp_file_name = data.substr(data.indexOf(folder) + folder.length + 1).trim();
                 // console.log('current_temp_file_name', current_temp_file_name)
                 // console.log('dir', dir)
