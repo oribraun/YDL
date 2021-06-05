@@ -1,6 +1,4 @@
-FROM node:14-alpine
-
-RUN apt-get update || : && apt-get install python -y
+FROM nikolaik/python3.7-nodejs14
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
