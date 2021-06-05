@@ -1,4 +1,4 @@
-FROM nikolaik/python3.7-nodejs14
+FROM nikolaik/python3.9-nodejs14
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
