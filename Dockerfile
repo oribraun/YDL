@@ -1,5 +1,4 @@
-FROM nikolaik/python3.9-nodejs14
-
+FROM node:14-alpine
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 COPY . .
