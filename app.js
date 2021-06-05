@@ -97,11 +97,11 @@ app.get('/download-playlist', function(req,res) {
     args.push('--skip-download');
     args.push('--dump-json');
     args.push(URL);
-
     const TEN_MEGABYTES = 1000 * 1000 * 10;
     const options = {};
     const execFileOpts = { encoding: 'utf8' ,maxBuffer: TEN_MEGABYTES };
 
+    // console.log(__dirname + youtube_dl + ' ' + args.join(' '))
     var proc = spawn(__dirname + youtube_dl, args, { execFileOpts, options }, function done(err, stdout, stderr) {
         if (err) {
             console.error('Error:', err.stack);
@@ -129,7 +129,7 @@ app.get('/download-playlist', function(req,res) {
     });
     proc.stdout.on('data', function(data) {
         var data = JSON.parse(data);
-        // console.log('data', data);
+        // console.log('data1', data);
         var progress = Math.ceil((data.playlist_index / data.n_entries * 100));
         total = data.n_entries;
         console.log('progress', progress);
