@@ -3,6 +3,8 @@ application:
   name: "ydl"
   project: "YDL"
   organization: "QoveryCommunity"
+  publicly_accessible: true
+  port: 4000
 routers:
 - name: "main-ydl"
   routes:
