@@ -172,6 +172,7 @@ export class YoutubeDownloaderComponent implements OnInit {
             for (const p in copyParamsArray) {
                 if (copyParamsArray[p].indexOf('list=') > -1) {
                     this.copyListUrl = copyUrl + '?' + copyParamsArray[p];
+                    this.copyListUrl = this.copyListUrl.replace('watch', 'playlist');
                 } else if (copyParamsArray[p].indexOf('v=') > -1) {
                     this.copyVideoUrl = copyUrl + '?' + copyParamsArray[p];
                 }
