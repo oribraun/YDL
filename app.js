@@ -37,9 +37,6 @@ app.use("/dist", express.static(__dirname + '/dist'));
 var sockets = [];
 var sess;
 
-app.get('/', function(req, res) {
-    res.sendFile(__dirname + '/dist/index.html');
-})
 io.on('connection', function(socket){
     console.log('a user connected - ' + socket.id);
     sockets.push(socket.id);
@@ -72,9 +69,11 @@ app.get('/download-playlist', function(req,res) {
     console.log('dir', dir);
     if (!fs.existsSync(__dirname + downloadDir)) {
         fs.mkdirSync(__dirname + downloadDir, { recursive: true });
+        fs.chmodSync(__dirname + downloadDir, 777)
     }
     if (!fs.existsSync(__dirname + dir)) {
         fs.mkdirSync(__dirname + dir, { recursive: true });
+        fs.chmodSync(__dirname + dir, 777)
     }
     if(sess.proc) {
         try {
@@ -433,6 +432,9 @@ app.get('/download-playlist', function(req,res) {
     res.json({});
 });
 
+app.get('/*', function(req, res) {
+    res.sendFile(__dirname + '/dist/index.html');
+})
 function startCron() {
     var downloadFolder = __dirname + downloadDir;
     var zipFolder = __dirname + '/lists/';
