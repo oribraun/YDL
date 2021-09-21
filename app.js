@@ -34,13 +34,12 @@ app.use("/lists", express.static(__dirname + '/lists'));
 app.use("/dist", express.static(__dirname + '/dist'));
 
 
-var sockets = [];
+var sockets = {};
 var sess;
-
+var usersCount = 0;
 io.on('connection', function(socket){
     console.log('a user connected - ' + socket.id);
-    sockets.push(socket.id);
-    socket.emit('set-index', sockets.length - 1);
+    socket.emit('set-socket-id', socket.id);
     socket.on('disconnect', function(){
         console.log('user disconnected');
     });
@@ -59,7 +58,7 @@ app.get('/download-playlist', function(req,res) {
     console.log('download-playlist1')
     var URL = req.query.URL;
     var TYPE = req.query.TYPE;
-    var socketIndex = req.query.sIndex;
+    var socketId = req.query.sId;
     var count = 1;
     var total;
     var listId = URL.split("list=")[1];
@@ -129,17 +128,27 @@ app.get('/download-playlist', function(req,res) {
     proc.stdout.on('data', function(data) {
         var data = JSON.parse(data);
         // console.log('data1', data);
-        var progress = Math.ceil((data.playlist_index / data.n_entries * 100));
-        total = data.n_entries;
+        let playlist_index = data.playlist_index;
+        let n_entries = data.n_entries;
+        if (playlist_index === null) {
+            playlist_index = 1;
+        }
+        if (n_entries === null || n_entries === undefined) {
+            n_entries = 1;
+        }
+        console.log('playlist_index', playlist_index)
+        console.log('n_entries', n_entries)
+        var progress = Math.ceil((playlist_index / n_entries * 100));
+        total = n_entries;
         console.log('progress', progress);
         // console.log('data', data);
-        console.log('data.n_entries', data.n_entries);
+        console.log('data.n_entries', n_entries);
         console.log('data.webpage_url', data.webpage_url);
         console.log('data.playlist_index', data.playlist_index);
         if(!progress) {
             progress = 100;
         }
-        io.to(sockets[socketIndex]).emit('progress', progress, data.webpage_url, data.thumbnail, data.title, data.description, data.playlist_index);
+        io.to(socketId).emit('progress', progress, data.webpage_url, data.thumbnail, data.title, data.description, playlist_index);
         // process.stdout.write(data);
     });
     proc.on('close', function(code, signal) {
@@ -151,7 +160,7 @@ app.get('/download-playlist', function(req,res) {
             downloadList();
         }
         if(code) {
-            io.to(sockets[socketIndex]).emit('failed', 'process failed');
+            io.to(socketId).emit('failed', 'process failed');
         }
     });
 
@@ -235,7 +244,7 @@ app.get('/download-playlist', function(req,res) {
         proc.stderr.on('data', function(data) {
             console.log('err', data.toString('utf8'));
             failedFiles.push(current_temp_file_name);
-            io.to(sockets[socketIndex]).emit('item-failed', count);
+            io.to(socketId).emit('item-failed', count);
             // process.stderr.write(data);
         });
         proc.stdout.on('data', function(data) {
@@ -246,18 +255,26 @@ app.get('/download-playlist', function(req,res) {
                 console.log('matches[0]',matches[0]);
             }
             // var data = JSON.parse(data);
-            if(data.indexOf('Downloading video info webpage') > -1 || data.indexOf('[download] Downloading video') > -1) {
+            if(data.indexOf('[download] Destination') > -1) {
+                count++;
+            }
+            if(data.indexOf('Downloading video info webpage') > -1
+                || data.indexOf('[download] Downloading video') > -1) {
                 current_temp_file_name = data.substr(data.indexOf(folder) + folder.length + 1).trim();
                 // console.log('current_temp_file_name', current_temp_file_name)
                 // console.log('dir', dir)
-                count++;
+                io.to(socketId).emit('item-success', count);
+                // count++;
             }
             console.log('data', data);
             if(data.indexOf('%') > -1) {
                 var percent = Math.ceil(data.substr(data.indexOf(' ') + 1,data.length - (data.length - data.indexOf('%') + 1) - data.indexOf(' ')))
                 console.log('percent',percent)
                 console.log('count',count)
-                io.to(sockets[socketIndex]).emit('item-progress', percent, count);
+                io.to(socketId).emit('item-progress', percent, count);
+                // if(percent >= 100) {
+                //     io.to(socketId).emit('item-success', count);
+                // }
             } else {
                 // waiting
             }
@@ -266,20 +283,21 @@ app.get('/download-playlist', function(req,res) {
             // process.stdout.cursorTo(0);
             // process.stdout.clearLine(1);
             // process.stdout.write(percent + '%');
-            // io.to(sockets[socketIndex]).emit('item-progress', percent, count);
+            // io.to(socketId).emit('item-progress', percent, count);
             // process.stdout.write(data);
         });
         proc.on('close', function(code, signal) {
             console.log('code', code);
             console.log('signal', signal);
             console.log('execFile closed');
+            io.to(socketId).emit('item-success', count);
             if(!signal) {
                 delete sess.proc;
                 // removeFailedFiles(dir, failedFiles);
                 createZip(dir);
             }
             // if(code) {
-            //     io.to(sockets[socketIndex]).emit('failed', 'process failed');
+            //     io.to(socketId).emit('failed', 'process failed');
             // }
         });
     }
@@ -329,7 +347,7 @@ app.get('/download-playlist', function(req,res) {
                 var percent = Math.ceil(data.substr(data.indexOf(' ') + 1,data.length - (data.length - data.indexOf('%') + 1) - data.indexOf(' ')))
                 console.log('percent',percent)
                 console.log('count',count)
-                io.to(sockets[socketIndex]).emit('item-progress', percent, count);
+                io.to(socketId).emit('item-progress', percent, count);
             } else {
                 // waiting
             }
@@ -338,7 +356,7 @@ app.get('/download-playlist', function(req,res) {
             // process.stdout.cursorTo(0);
             // process.stdout.clearLine(1);
             // process.stdout.write(percent + '%');
-            // io.to(sockets[socketIndex]).emit('item-progress', percent, count);
+            // io.to(socketId).emit('item-progress', percent, count);
             // process.stdout.write(data);
         });
         proc.on('close', function(code, signal) {
@@ -350,13 +368,13 @@ app.get('/download-playlist', function(req,res) {
                 createZip(dir);
             }
             if(code) {
-                io.to(sockets[socketIndex]).emit('failed', 'process failed');
+                io.to(socketId).emit('failed', 'process failed');
             }
         });
     }
 
     function createZip(dir) {
-        io.to(sockets[socketIndex]).emit('starting-zip');
+        io.to(socketId).emit('starting-zip');
         if (!fs.existsSync(__dirname + zipDest)) {
             fs.mkdirSync(__dirname + zipDest, { recursive: true });
         }
@@ -365,7 +383,7 @@ app.get('/download-playlist', function(req,res) {
         output.on('close', function() {
             console.log(archive.pointer() + ' total bytes');
             console.log('archiver has been finalized and the output file descriptor has closed.');
-            io.to(sockets[socketIndex]).emit('download-url', protocol + host + zipDest + '/' + folder + '.zip');
+            io.to(socketId).emit('download-url', protocol + host + zipDest + '/' + folder + '.zip');
             fs.removeSync(__dirname + dir);
             setTimeout(function(){
                 fs.removeSync(__dirname + zipDest + '/' + folder + '.zip')
@@ -398,11 +416,11 @@ app.get('/download-playlist', function(req,res) {
             var entriesTotal = data.entries.total;
             var entriesProcessed = data.entries.processed;
             var progress = Math.ceil((data.fs.processedBytes / data.fs.totalBytes * 100));
-            io.to(sockets[socketIndex]).emit('zip-progress', progress);
+            io.to(socketId).emit('zip-progress', progress);
         });
 
         archive.on('end', function(){
-            io.to(sockets[socketIndex]).emit('zip-end');
+            io.to(socketId).emit('zip-end');
         })
 
         archive.pipe(output);
