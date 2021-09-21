@@ -1,5 +1,5 @@
 <div class="">
-    <div class="col-8 offset-2">
+    <div class="col-12 col-lg-8 offset-lg-2">
         <h1 class="heading">Totally Free YouTube Downloader !</h1>
         <div class="input-group">
             <input type="text" class="form-control" [(ngModel)]="URLinput" placeholder="Paste Video URL or  Playlist URL">
@@ -38,12 +38,21 @@
                             <div class="progress-bar progress-bar-striped progress-bar-animated" [style.width]="listItem.progress + '%'"><span [hidden]="!listItem.progress">{{listItem.progress + '%'}}</span></div>
                         </div>
                     </div>
-                    <div class="col-1">
-                        <div class="success" *ngIf="listItem.progress >= 100 && !listItem.failed">
-                            <app-success-icon type="success"></app-success-icon>
+                    <div class="col-2">
+                        <div class="item-icon progress-icon" *ngIf="!listItem.success && !listItem.failed && !listItem.converting && !listItem.progress">
+                            <app-success-icon [type]="'questionmark'"></app-success-icon>
                         </div>
-                        <div class="failed" *ngIf="listItem.failed">
-                            <app-success-icon type="error"></app-success-icon>
+                        <div class="item-icon downloading-icon" *ngIf="!listItem.success && !listItem.failed && !listItem.converting && listItem.progress">
+                            <app-success-icon [type]="'downloading'"></app-success-icon>
+                        </div>
+                        <div class="item-icon converting-icon" *ngIf="!listItem.success && !listItem.failed && listItem.converting">
+                            <app-success-icon [type]="'converting'"></app-success-icon>
+                        </div>
+                        <div class="item-icon success-icon" *ngIf="listItem.success && !listItem.failed">
+                            <app-success-icon [type]="'success'"></app-success-icon>
+                        </div>
+                        <div class="item-icon failed-icon" *ngIf="!listItem.success && listItem.failed">
+                            <app-success-icon [type]="'error'"></app-success-icon>
                         </div>
                     </div>
                 </div>

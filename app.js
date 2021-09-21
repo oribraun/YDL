@@ -258,6 +258,10 @@ app.get('/download-playlist', function(req,res) {
             if(data.indexOf('[download] Destination') > -1) {
                 count++;
             }
+            if(data.indexOf('[ffmpeg] Destination') > -1) {
+                console.log('converting item')
+                io.to(socketId).emit('item-convert', count);
+            }
             if(data.indexOf('Downloading video info webpage') > -1
                 || data.indexOf('[download] Downloading video') > -1) {
                 current_temp_file_name = data.substr(data.indexOf(folder) + folder.length + 1).trim();

@@ -39,7 +39,7 @@ export class YoutubeDownloaderComponent implements OnInit {
     public copyListUrl = '';
     public copyVideoUrl = '';
     private socket;
-    private socketIndex;
+    private socketId;
     public list: any[] = [];
     public startingFetchingList: boolean = false;
     public listProgress: any = 0;
@@ -60,8 +60,8 @@ export class YoutubeDownloaderComponent implements OnInit {
     ngOnInit() {
         // this.socket = io(window.location.protocol + '//' + window.location.hostname + ':3002');
         this.socket = io();
-        this.socket.on('set-index', (index) => {
-            this.socketIndex = index;
+        this.socket.on('set-socket-id', (id) => {
+            this.socketId = id;
         });
         this.socket.on('progress', (progress, youtubeUrl, thumbnail, title, description, index) => {
             this.startConvertion = false;
@@ -76,6 +76,8 @@ export class YoutubeDownloaderComponent implements OnInit {
                 {
                     progress: 0,
                     failed: false,
+                    success: false,
+                    converting: false,
                     youtubeUrl: youtubeUrl,
                     thumbnail: thumbnail,
                     title: title,
@@ -95,6 +97,11 @@ export class YoutubeDownloaderComponent implements OnInit {
             }
             this.updateItemProgress(index, progress);
         });
+        this.socket.on('item-convert', (index) => {
+            console.log('item-convert*************', index);
+            const ele = $('.item-' + (index - 1))[0];
+            this.setItemAsConverting(index);
+        });
         this.socket.on('item-failed', (index, chunkData) => {
             console.log('index', index);
             console.log('item-failed*************');
@@ -106,6 +113,17 @@ export class YoutubeDownloaderComponent implements OnInit {
             }
             this.setItemAsFailed(index);
         });
+        this.socket.on('item-success', (index, chunkData) => {
+            console.log('index', index);
+            console.log('item-success*************');
+            console.log('this.list.length', this.list.length);
+            const ele = $('.item-' + (index - 1))[0];
+            console.log('this.isScrolledIntoView(ele)', this.isScrolledIntoView(ele));
+            if (!this.isScrolledIntoView(ele)) {
+                this.scrollToElement(ele);
+            }
+            this.setItemAsSuccess(index);
+        })
         this.socket.on('starting-zip', () => {
             console.log('zip- start*************', );
             this.startingZip = true;
@@ -130,7 +148,7 @@ export class YoutubeDownloaderComponent implements OnInit {
         });
         this.socket.on('failed', (err) => {
             // window.location.href = url;
-            console.log('err',err)
+            console.log('err', err)
             alert(err)
             this.stopAll();
         });
@@ -149,11 +167,28 @@ export class YoutubeDownloaderComponent implements OnInit {
             }
         });
     }
+    setItemAsConverting(index) {
+        requestAnimationFrame(() => {
+            if (this.list[index - 1]) {
+                // this.list[index - 1].progress = 0;
+                this.list[index - 1].converting = true;
+            }
+        });
+    }
     setItemAsFailed(index) {
         requestAnimationFrame(() => {
             if (this.list[index - 1]) {
                 // this.list[index - 1].progress = 0;
                 this.list[index - 1].failed = true;
+            }
+        });
+    }
+
+    setItemAsSuccess(index) {
+        requestAnimationFrame(() => {
+            if (this.list[index - 1]) {
+                // this.list[index - 1].progress = 0;
+                this.list[index - 1].success = true;
             }
         });
     }
@@ -230,7 +265,7 @@ export class YoutubeDownloaderComponent implements OnInit {
         $.ajax({
             url: window.location.href + 'download-playlist',
             type: 'get',
-            data: {URL: URL, TYPE: this.type, sIndex: this.socketIndex},
+            data: {URL: URL, TYPE: this.type, sId: this.socketId},
             success: (res) => {
                 // if (res.url) {
                 //     window.location.href = res.url;
@@ -248,7 +283,7 @@ export class YoutubeDownloaderComponent implements OnInit {
     //     $.ajax({
     //         url: 'http://localhost:4000/download-playlist',
     //         type: 'get',
-    //         data: {URL: URL, TYPE: this.type, sIndex: this.socketIndex},
+    //         data: {URL: URL, TYPE: this.type, sId: this.socketId},
     //         success: (res) => {
     //             // if (res.url) {
     //             //     window.location.href = res.url;

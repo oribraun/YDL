@@ -40,13 +40,33 @@
 .item {
     box-shadow: 0 0 5px #ccc;
     margin: 1% 0;
-    .success {
-        margin-top: 19%;
-        max-width:50px;
+    .item-icon {
+        margin: 0 auto;
+        transform: translateY(-50%);
+        top: 50%;
+        position: relative;
     }
-    .failed {
-        margin-top: 19%;
-        max-width:50px;
+    .success-icon, .progress-icon, .failed-icon {
+        max-width: 37%;
+        @media (max-width: 768px) {
+            max-width: 45%;
+            font-size: .8em;
+        }
+        @media (max-width: 568px) {
+            max-width: 55%;
+            font-size: .5em;
+        }
+    }
+    .converting-icon {
+
+    }
+    .downloading-icon {
+
+    }
+    .title {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
     }
 }
 .fetching-list-progress {

@@ -1,19 +1,39 @@
 <div class="wrap" *ngIf="type === 'success'">
-<div class="swal2-icon swal2-success swal2-animate-success-icon" style="display: flex;">
-    <div class="swal2-success-circular-line-left" style="background-color: rgb(255, 255, 255);"></div>
-    <span class="swal2-success-line-tip"></span>
-    <span class="swal2-success-line-long"></span>
-    <div class="swal2-success-ring"></div>
-    <div class="swal2-success-fix" style="background-color: rgb(255, 255, 255);"></div>
-    <div class="swal2-success-circular-line-right" style="background-color: rgb(255, 255, 255);"></div>
-</div>
+    <div class="swal2-icon swal2-success swal2-animate-success-icon" style="display: flex;">
+        <div class="swal2-success-circular-line-left" style="background-color: rgb(255, 255, 255);"></div>
+        <span class="swal2-success-line-tip"></span>
+        <span class="swal2-success-line-long"></span>
+        <div class="swal2-success-ring"></div>
+        <div class="swal2-success-fix" style="background-color: rgb(255, 255, 255);"></div>
+        <div class="swal2-success-circular-line-right" style="background-color: rgb(255, 255, 255);"></div>
+    </div>
 </div>
 
 <div class="wrap" *ngIf="type === 'error'">
-<div class="swal2-icon swal2-error swal2-animate-error-icon" style="display: flex;">
+    <div class="swal2-icon swal2-error swal2-animate-error-icon" style="display: flex;">
     <span class="swal2-x-mark">
         <span class="swal2-x-mark-line-left"></span>
         <span class="swal2-x-mark-line-right"></span>
     </span>
+    </div>
 </div>
+
+<div class="wrap" *ngIf="type === 'questionmark'">
+<!--    <div class="swal2-icon swal2-success swal2-animate-success-icon" style="display: flex;">-->
+<!--        <div class="swal2-success-circular-line-left" style="background-color: rgb(255, 255, 255);"></div>-->
+<!--&lt;!&ndash;        <span class="swal2-success-line-tip"></span>&ndash;&gt;-->
+<!--&lt;!&ndash;        <span class="swal2-success-line-long"></span>&ndash;&gt;-->
+<!--        <div class="swal2-success-ring"></div>-->
+<!--&lt;!&ndash;        <div class="swal2-success-fix" style="background-color: rgb(255, 255, 255);"></div>&ndash;&gt;-->
+<!--        <div class="swal2-success-circular-line-right" style="background-color: rgb(255, 255, 255);"></div>-->
+<!--    </div>-->
+    <div class="swal2-icon swal2-question swal2-icon-show" style="display: flex;">
+        <div class="swal2-icon-content">?</div>
+    </div>
+</div>
+<div class="wrap" *ngIf="type === 'downloading'">
+    <div class="converting">downloading</div>
+</div>
+<div class="wrap" *ngIf="type === 'converting'">
+    <div class="converting">converting</div>
 </div>
