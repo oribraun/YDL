@@ -16,7 +16,8 @@ var io = require('socket.io')(http);
 var CronJob = require('cron').CronJob;
 var isWin = process.platform === "win32";
 var port = process.env.PORT || 4000;
-var youtube_dl = isWin ? '/windows/youtube-dl.exe' : '/linux/youtube-dl';
+// var youtube_dl = isWin ? '/windows/youtube-dl.exe' : '/linux/youtube-dl';
+var youtube_dl = isWin ? '/windows/yt-dlp.exe' : '/linux/yt-dlp';
 var ffmpeg = isWin ? '/windows/ffmpeg.exe' : '/linux/ffmpeg';
 var downloadDir = '/tmp/';
 
@@ -683,17 +684,17 @@ function getDownloadListArgs(TYPE, URL, ffmpeg, dir) {
     if(TYPE === 'mp3') {
         // yt-dlp.exe --ignore-errors --format bestaudio --extract-audio --audio-format mp3 --audio-quality 160K --output "%(title)s.%(ext)s" --yes-playlist https://www.youtube.com/playlist?list=PL3-sRm8xAzY-556lOpSGH6wVzyofoGpzU
         // args.push('--ignore-errors');
-        args.push('-i');
-        args.push('-x');
-        args.push('-f');
+        args.push('--ignore-errors');
+        args.push('--format');
         args.push('bestaudio/best');
+        args.push('--extract-audio');
         args.push('--audio-quality');
         args.push('5');
         args.push('--audio-format');
         args.push('mp3');
         args.push('--ffmpeg-location');
         args.push(__dirname + ffmpeg);
-        args.push('-o');
+        args.push('--output');
         // args.push(dir + '/%(title)s.' + TYPE);
         args.push(__dirname + dir + '/%(title)s.%(ext)s');
 
@@ -713,14 +714,14 @@ function getDownloadListArgs(TYPE, URL, ffmpeg, dir) {
         // args.push('bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4');
         // args.push('--audio-quality');
         // args.push('0');
-        args.push('-i');
-        args.push('-f');
+        args.push('--ignore-errors');
+        args.push('--format');
         args.push('best');
         args.push('--recode-video');
         args.push('mp4');
         args.push('--encoding');
         args.push('utf8');
-        args.push('-o');
+        args.push('--output');
         args.push(__dirname + dir + '/%(title)s.' + TYPE);
     }
 

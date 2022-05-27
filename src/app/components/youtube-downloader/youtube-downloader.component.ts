@@ -35,7 +35,7 @@ declare var $;
 export class YoutubeDownloaderComponent implements OnInit {
 
     // public URLinput = 'https://www.youtube.com/watch?v=PIEN5Ix8gqQ&list=PLKkFYyR1ctskzy5BGA7TvTJ1Lo-Fd8MJU'; // 2 songs
-    public URLinput = ''; // 13 songs
+    public URLinput = 'https://www.youtube.com/playlist?list=PLCuR0GUtdmkazUxDYCv93ndqtFGZ_phkF'; // 13 songs
     public copyListUrl = '';
     public copyVideoUrl = '';
     private socket;

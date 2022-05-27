@@ -1,0 +1,2 @@
+yt-dlp.exe --ignore-errors --format bestaudio --extract-audio --audio-format mp3 --audio-quality 160K --output "%(title)s.%(ext)s" --yes-playlist https://www.youtube.com/playlist?list=PL3-sRm8xAzY-556lOpSGH6wVzyofoGpzU
+yt-dlp.exe --skip-download --dump-json https://www.youtube.com/playlist?list=PL3-sRm8xAzY-556lOpSGH6wVzyofoGpzU
