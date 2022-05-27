@@ -40,7 +40,9 @@ export class YoutubeDownloaderComponent implements OnInit {
     public copyVideoUrl = '';
     private socket;
     private socketId;
-    public list: any[] = [];
+    public list: ListItem[] = [];
+    public successItems = 0;
+    public failedItems = 0;
     public startingFetchingList: boolean = false;
     public listProgress: any = 0;
     public startingZip: boolean = false;
@@ -55,11 +57,17 @@ export class YoutubeDownloaderComponent implements OnInit {
     }
     public timerInterval: any;
     public _showTimer: boolean = false;
+    public autoScrolling: boolean = true;
+    private host;
     constructor() { }
 
     ngOnInit() {
+        this.host = window.location.href;
+        if (window.location.port === '4200') {
+            this.host = 'http://localhost:4000/';
+        }
         // this.socket = io(window.location.protocol + '//' + window.location.hostname + ':3002');
-        this.socket = io();
+        this.socket = io(this.host);
         this.socket.on('set-socket-id', (id) => {
             this.socketId = id;
         });
@@ -72,7 +80,7 @@ export class YoutubeDownloaderComponent implements OnInit {
             console.log('description', description);
             console.log('index', index);
             this.updateProgress(progress);
-            this.list.push(
+            const listItem = new ListItem(
                 {
                     progress: 0,
                     failed: false,
@@ -82,16 +90,18 @@ export class YoutubeDownloaderComponent implements OnInit {
                     thumbnail: thumbnail,
                     title: title,
                     description: description,
-                    i: index}
+                    i: index
+                }
             );
+            this.list.push(listItem);
             this.stopLoader();
         });
         this.socket.on('item-progress', (progress, index, chunkData) => {
-            console.log('index', index);
-            console.log('progress*************', progress);
-            console.log('this.list.length', this.list.length);
+            console.log('item-index', index, progress + '%');
+            // console.log('item-progress*************', progress);
+            // console.log('this.list.length', this.list.length);
             const ele = $('.item-' + (index - 1))[0];
-            console.log('this.isScrolledIntoView(ele)', this.isScrolledIntoView(ele));
+            // console.log('this.isScrolledIntoView(ele)', this.isScrolledIntoView(ele));
             if (!this.isScrolledIntoView(ele)) {
                 this.scrollToElement(ele);
             }
@@ -103,26 +113,40 @@ export class YoutubeDownloaderComponent implements OnInit {
             this.setItemAsConverting(index);
         });
         this.socket.on('item-failed', (index, chunkData) => {
-            console.log('index', index);
-            console.log('item-failed*************');
-            console.log('this.list.length', this.list.length);
+            this.failedItems++;
+            console.log('item-failed*************', index);
+            // console.log('this.list.length', this.list.length);
             const ele = $('.item-' + (index - 1))[0];
-            console.log('this.isScrolledIntoView(ele)', this.isScrolledIntoView(ele));
+            // console.log('this.isScrolledIntoView(ele)', this.isScrolledIntoView(ele));
             if (!this.isScrolledIntoView(ele)) {
                 this.scrollToElement(ele);
             }
             this.setItemAsFailed(index);
         });
         this.socket.on('item-success', (index, chunkData) => {
-            console.log('index', index);
-            console.log('item-success*************');
-            console.log('this.list.length', this.list.length);
-            const ele = $('.item-' + (index - 1))[0];
-            console.log('this.isScrolledIntoView(ele)', this.isScrolledIntoView(ele));
-            if (!this.isScrolledIntoView(ele)) {
-                this.scrollToElement(ele);
+            if (this.list[index - 1] && !this.list[index - 1].failed) {
+                this.successItems++;
+                console.log('item-success*************', index);
+                // console.log('this.list.length', this.list.length);
+                const ele = $('.item-' + (index - 1))[0];
+                // console.log('this.isScrolledIntoView(ele)', this.isScrolledIntoView(ele));
+                if (!this.isScrolledIntoView(ele)) {
+                    this.scrollToElement(ele);
+                }
+                this.setItemAsSuccess(index);
             }
-            this.setItemAsSuccess(index);
+        })
+        this.socket.on('all-failed', (data) => {
+            console.log('all-failed');
+            alert('all list failed downloading');
+        })
+        this.socket.on('all-files-failed', (data) => {
+            console.log('all-files-failed', data);
+                // const listItemMap = [];
+                // for (const i in data) {
+                //     listItemMap.push(this.list[parseInt(i, 0) - 1]);
+                // }
+                // console.log('listItemMap', listItemMap);
         })
         this.socket.on('starting-zip', () => {
             console.log('zip- start*************', );
@@ -140,6 +164,7 @@ export class YoutubeDownloaderComponent implements OnInit {
             console.log('zip- end*************', progress);
             this.zipProgress = 100;
             this.stopTimer();
+            this.resetAutoScrolling();
         });
         this.socket.on('download-url', (url) => {
             // window.location.href = url;
@@ -170,7 +195,8 @@ export class YoutubeDownloaderComponent implements OnInit {
     setItemAsConverting(index) {
         requestAnimationFrame(() => {
             if (this.list[index - 1]) {
-                // this.list[index - 1].progress = 0;
+                this.list[index - 1].success = false;
+                this.list[index - 1].failed = false;
                 this.list[index - 1].converting = true;
             }
         });
@@ -178,8 +204,9 @@ export class YoutubeDownloaderComponent implements OnInit {
     setItemAsFailed(index) {
         requestAnimationFrame(() => {
             if (this.list[index - 1]) {
-                // this.list[index - 1].progress = 0;
+                this.list[index - 1].success = false;
                 this.list[index - 1].failed = true;
+                this.list[index - 1].converting = false;
             }
         });
     }
@@ -187,8 +214,9 @@ export class YoutubeDownloaderComponent implements OnInit {
     setItemAsSuccess(index) {
         requestAnimationFrame(() => {
             if (this.list[index - 1]) {
-                // this.list[index - 1].progress = 0;
                 this.list[index - 1].success = true;
+                this.list[index - 1].failed = false;
+                this.list[index - 1].converting = false;
             }
         });
     }
@@ -230,6 +258,7 @@ export class YoutubeDownloaderComponent implements OnInit {
             this.stopLoader();
             this.stopTimer();
             this.resetTimer();
+            this.resetAutoScrolling();
         }
         // window.location.href = 'http://localhost:4000/download?URL=' + URL + '&TYPE=' + type.value;
     }
@@ -254,8 +283,11 @@ export class YoutubeDownloaderComponent implements OnInit {
         this.resetTimer();
         this.startTimer();
         this.showTimer();
+        this.resetAutoScrolling();
         this.setOnBeforeUnloadEvent();
         this.list = [];
+        this.successItems = 0;
+        this.failedItems = 0;
         this.startingFetchingList = false;
         this.listProgress = 0;
         this.startingZip = false;
@@ -263,7 +295,7 @@ export class YoutubeDownloaderComponent implements OnInit {
         this.hideModal();
         this.startingFetchingList = true;
         $.ajax({
-            url: window.location.href + 'download-playlist',
+            url: this.host + 'download-playlist',
             type: 'get',
             data: {URL: URL, TYPE: this.type, sId: this.socketId},
             success: (res) => {
@@ -307,6 +339,7 @@ export class YoutubeDownloaderComponent implements OnInit {
         this.stopTimer();
         this.resetTimer();
         this.hideTimer();
+        this.resetAutoScrolling();
         this.unSetOnBeforeUnloadEvent();
     }
 
@@ -317,8 +350,8 @@ export class YoutubeDownloaderComponent implements OnInit {
             const elemBottom = rect.bottom;
 
             // Only completely visible elements return true:
-            console.log('elemTop', elemTop);
-            console.log('elemBottom', elemBottom);
+            // console.log('elemTop', elemTop);
+            // console.log('elemBottom', elemBottom);
             const isVisible = (elemTop >= 0) && (elemBottom <= window.innerHeight);
             // Partially visible elements return true:
             // isVisible = elemTop < window.innerHeight && elemBottom >= 0;
@@ -329,32 +362,49 @@ export class YoutubeDownloaderComponent implements OnInit {
     }
 
     scrollToElement(el): void {
-        // el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        $('html, body').animate({
-            scrollTop: $(el).offset().top
-        }, 500);
+        if (this.autoScrolling) {
+            // el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            $('html, body').animate({
+                scrollTop: $(el).offset().top
+            }, 500);
+        }
     }
 
     startDownload(filePath): void {
         const link = document.createElement('a');
         link.href = filePath;
-        // link.target = '_blank';
+        if (filePath.indexOf('.zip') === -1) {
+            link.target = '_blank';
+        }
         link.download = filePath.substr(filePath.lastIndexOf('/') + 1);
         link.click();
         link.remove();
     }
 
+    startDownloadBlob(blob, fileName): void {
+        const link = document.createElement('a');
+        const data = Uint8Array.from(blob.data);
+        const content = new Blob([data.buffer], { type: blob.type });
+        const encodedUri = window.URL.createObjectURL(content);
+        link.href = encodedUri;
+        if (fileName.indexOf('.zip') === -1) {
+            link.target = '_blank';
+        }
+        link.download = fileName;
+        link.click();
+        link.remove();
+    }
     startTimer() {
         let seconds = 0;
         let minutes = 0;
         let hours = 0;
         this.timerInterval = setInterval(() => {
             seconds++;
-            if (seconds % 60 === 0) {
+            if (seconds && seconds % 60 === 0) {
                 seconds = 0;
                 minutes++;
             }
-            if (minutes % 60 === 0) {
+            if (minutes && minutes % 60 === 0) {
                 minutes = 0;
                 hours++;
             }
@@ -388,5 +438,54 @@ export class YoutubeDownloaderComponent implements OnInit {
     unSetOnBeforeUnloadEvent() {
         window.onbeforeunload = (event) => {};
     }
+    toggleAutoScrolling() {
+        this.autoScrolling = !this.autoScrolling;
+    }
+    resetAutoScrolling() {
+        this.autoScrolling = true;
+    }
 
+    downloadOneItem(item: ListItem) {
+        const youtubeUrl = item.youtubeUrl;
+        // this.startLoader();
+        $.ajax({
+            url: this.host + 'download-item',
+            type: 'get',
+            data: {URL: youtubeUrl, TYPE: this.type, sId: this.socketId},
+            success: (res) => {
+                // if (res.url) {
+                //     window.location.href = res.url;
+                // }
+                // this.stopLoader();
+                if (res && res.blob && res.fileName) {
+                    console.log('res.fileName', res.fileName)
+                    console.log('res.blob', res.blob)
+                    this.startDownloadBlob(res.blob, res.fileName);
+                }
+                // this.stopLoader();
+            },
+            error: (err) => {
+                alert(err);
+                this.stopLoader();
+            }
+        });
+        console.log('item', item);
+    }
+
+}
+
+export class ListItem {
+    progress = 0;
+    failed: boolean;
+    success: boolean;
+    converting: boolean;
+    youtubeUrl: string;
+    thumbnail: string;
+    title: string;
+    description: string;
+    i: number;
+
+    constructor(obj?: Partial<ListItem>) {
+        Object.assign(this, obj);
+    }
 }

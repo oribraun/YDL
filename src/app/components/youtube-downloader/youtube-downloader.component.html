@@ -18,7 +18,7 @@
         </div>
 <!--        <span class="spinner-border spinner-border-md" role="status"></span>-->
         <div *ngIf="startingFetchingList">
-            <h3>Fetching List</h3>
+            <h3>Fetching List - {{successItems + '/' + list.length + (failedItems ? ' failed ' + failedItems : '')}}</h3>
             <div class="progress fetching-list-progress">
                 <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="" aria-valuemin="0" aria-valuemax="100" [ngStyle]="{'width': listProgress + '%'}"><span [hidden]="!listProgress">{{listProgress + '%'}}</span></div>
             </div>
@@ -32,7 +32,17 @@
                         </div>
                     </div>
                     <div class="col-8">
-                        <div class="title text-left">{{listItem.title}}</div>
+                        <div class="title text-left">
+                            {{listItem.title}}
+                            <a href="{{listItem.youtubeUrl}}" target="_blank">
+                                <div class="icon-wrapper">
+                                    <i class="my-icon-youtube"></i>
+                                </div>
+                            </a>
+                            <div *ngIf="listItem.failed" (click)="downloadOneItem(listItem)" class="icon-wrapper downArrow-icon-wrapper">
+                                <i class="my-icon-downArrow"></i>
+                            </div>
+                        </div>
 <!--                        <div class="progress progress-{{listItem.i}}">{{listItem.progress}}%</div>-->
                         <div class="progress item-progress">
                             <div class="progress-bar progress-bar-striped progress-bar-animated" [style.width]="listItem.progress + '%'"><span [hidden]="!listItem.progress">{{listItem.progress + '%'}}</span></div>
@@ -45,13 +55,13 @@
                         <div class="item-icon downloading-icon" *ngIf="!listItem.success && !listItem.failed && !listItem.converting && listItem.progress">
                             <app-success-icon [type]="'downloading'"></app-success-icon>
                         </div>
-                        <div class="item-icon converting-icon" *ngIf="!listItem.success && !listItem.failed && listItem.converting">
+                        <div class="item-icon converting-icon" *ngIf="listItem.converting">
                             <app-success-icon [type]="'converting'"></app-success-icon>
                         </div>
-                        <div class="item-icon success-icon" *ngIf="listItem.success && !listItem.failed">
+                        <div class="item-icon success-icon" *ngIf="listItem.success">
                             <app-success-icon [type]="'success'"></app-success-icon>
                         </div>
-                        <div class="item-icon failed-icon" *ngIf="!listItem.success && listItem.failed">
+                        <div class="item-icon failed-icon" *ngIf="listItem.failed">
                             <app-success-icon [type]="'error'"></app-success-icon>
                         </div>
                     </div>
@@ -92,7 +102,13 @@
 </div>
 
 <div class="floating-timer" *ngIf="_showTimer">
+    <div class="hours" *ngIf="timer.hours !== '00'">{{timer.hours}}</div>
+    <div class="separator" *ngIf="timer.hours !== '00'">:</div>
     <div class="minutes">{{timer.minutes}}</div>
     <div class="separator">:</div>
     <div class="seconds">{{timer.seconds}}</div>
+</div>
+
+<div class="floating-scrolling" *ngIf="_showTimer" (click)="toggleAutoScrolling()">
+    <div class="icon-scroll" [title]="'auto scrolling ' + (autoScrolling ? 'enabled ' : 'disabled')" [ngClass]="{'icon-scroll-disabled': !autoScrolling}"></div>
 </div>
