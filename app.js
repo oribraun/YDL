@@ -158,7 +158,7 @@ app.get('/download-playlist', function(req,res) {
             progress = 100;
         }
         sess.playlistMap[playlist_index] = data.title;
-        io.to(socketId).emit('progress', progress, data.webpage_url, data.thumbnail, data.title, data.description, playlist_index);
+        io.to(socketId).emit('progress', progress, data.webpage_url, data.thumbnail, data.title, data.description, playlist_index, socketId);
         // process.stdout.write(data);
     });
     proc.on('close', function(code, signal) {
@@ -170,7 +170,7 @@ app.get('/download-playlist', function(req,res) {
             downloadList(socketId);
         }
         if(code) {
-            io.to(socketId).emit('failed', 'process failed');
+            io.to(socketId).emit('failed', 'process failed', socketId);
         }
     });
 
@@ -231,7 +231,7 @@ app.get('/download-playlist', function(req,res) {
                     // failedFiles.push(current_temp_file_name);
                     sess.failedFilesMap[current_video_index] = {current_temp_file_name: current_temp_file_name, err: err}
                     // failedFiles.push(current_temp_file_name);
-                    io.to(socketId).emit('item-failed', current_video_index);
+                    io.to(socketId).emit('item-failed', current_video_index, socketId);
                     // process.stderr.write(data);
                 }
             }
@@ -255,9 +255,9 @@ app.get('/download-playlist', function(req,res) {
             // console.log('current_temp_file_name', current_temp_file_name)
             // count++;
             // }
-            if(data.indexOf('[ffmpeg] Destination') > -1) {
+            if(data.indexOf('[ffmpeg] Destination') > -1 || data.indexOf('[ExtractAudio] Destination') > -1) {
                 console.log('converting item')
-                io.to(socketId).emit('item-convert', current_video_index);
+                io.to(socketId).emit('item-convert', current_video_index, socketId);
             }
             if(data.indexOf('Downloading video info webpage') > -1
                 || data.indexOf('[download] Downloading video') > -1) {
@@ -265,7 +265,7 @@ app.get('/download-playlist', function(req,res) {
                 let lastIndex = current_video_index - 1;
                 if (lastIndex && !sess.failedFilesMap[lastIndex]) {
                     sess.successCount++;
-                    io.to(socketId).emit('item-success', lastIndex);
+                    io.to(socketId).emit('item-success', lastIndex, socketId);
                 }
                 // count++;
             }
@@ -274,7 +274,7 @@ app.get('/download-playlist', function(req,res) {
                 var percent = Math.ceil(data.substr(data.indexOf(' ') + 1,data.length - (data.length - data.indexOf('%') + 1) - data.indexOf(' ')))
                 console.log('percent',percent)
                 console.log('current_video_index',current_video_index)
-                io.to(socketId).emit('item-progress', percent, current_video_index);
+                io.to(socketId).emit('item-progress', percent, current_video_index, socketId);
                 // if(percent >= 100) {
                 //     io.to(socketId).emit('item-success', count);
                 // }
@@ -296,18 +296,18 @@ app.get('/download-playlist', function(req,res) {
             delete sess.proc;
             if (!sess.failedFilesMap[current_video_index]) {
                 sess.successCount++;
-                io.to(socketId).emit('item-success', current_video_index);
+                io.to(socketId).emit('item-success', current_video_index, socketId);
             }
             if(!signal) {
                 delete sess.proc;
                 if (Object.keys(sess.failedFilesMap).length) {
                     console.log('failedFilesMap', JSON.stringify(sess.failedFilesMap, null, 2))
-                    io.to(socketId).emit('all-files-failed', sess.failedFilesMap);
+                    io.to(socketId).emit('all-files-failed', sess.failedFilesMap, socketId);
                 }
                 // console.log('sess.successCount', sess.successCount)
                 if (!sess.successCount) {
                     removeDir(dir);
-                    io.to(socketId).emit('all-failed');
+                    io.to(socketId).emit('all-failed', socketId);
                     return;
                 }
                 // removeFailedFiles(dir, failedFiles);
@@ -369,7 +369,7 @@ app.get('/download-playlist', function(req,res) {
                 var percent = Math.ceil(data.substr(data.indexOf(' ') + 1,data.length - (data.length - data.indexOf('%') + 1) - data.indexOf(' ')))
                 console.log('percent',percent)
                 console.log('count',count)
-                io.to(socketId).emit('item-progress', percent, count);
+                io.to(socketId).emit('item-progress', percent, count, socketId);
             } else {
                 // waiting
             }
@@ -390,13 +390,13 @@ app.get('/download-playlist', function(req,res) {
                 createZip(dir);
             }
             if(code) {
-                io.to(socketId).emit('failed', 'process failed');
+                io.to(socketId).emit('failed', 'process failed', socketId);
             }
         });
     }
 
     function createZip(dir) {
-        io.to(socketId).emit('starting-zip');
+        io.to(socketId).emit('starting-zip', socketId);
         if (!fs.existsSync(__dirname + zipDest)) {
             fs.mkdirSync(__dirname + zipDest, { recursive: true });
         }
@@ -405,7 +405,7 @@ app.get('/download-playlist', function(req,res) {
         output.on('close', function() {
             console.log(archive.pointer() + ' total bytes');
             console.log('archiver has been finalized and the output file descriptor has closed.');
-            io.to(socketId).emit('download-url', protocol + host + zipDest + '/' + folder + '.zip');
+            io.to(socketId).emit('download-url', protocol + host + zipDest + '/' + folder + '.zip', socketId);
             removeDir(dir);
             setTimeout(function(){
                 removeDir(zipDest + '/' + folder + '.zip');
@@ -439,11 +439,11 @@ app.get('/download-playlist', function(req,res) {
             var entriesTotal = data.entries.total;
             var entriesProcessed = data.entries.processed;
             var progress = Math.ceil((data.fs.processedBytes / data.fs.totalBytes * 100));
-            io.to(socketId).emit('zip-progress', progress);
+            io.to(socketId).emit('zip-progress', progress, socketId);
         });
 
         archive.on('end', function(){
-            io.to(socketId).emit('zip-end');
+            io.to(socketId).emit('zip-end', socketId);
         })
 
         archive.pipe(output);
@@ -460,7 +460,7 @@ app.get('/download-playlist', function(req,res) {
         const file = files[0];
         var output = fs.createReadStream(__dirname + dir + '/' + file).pipe(fs.createWriteStream(__dirname + fileDest + '/' + file));
         output.on('close', function() {
-            io.to(socketId).emit('download-url', protocol + host + fileDest + '/' + file);
+            io.to(socketId).emit('download-url', protocol + host + fileDest + '/' + file, socketId);
             removeDir(dir);
             setTimeout(function () {
                 //TODO fix corrupted files

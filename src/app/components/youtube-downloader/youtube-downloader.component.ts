@@ -71,7 +71,8 @@ export class YoutubeDownloaderComponent implements OnInit {
         this.socket.on('set-socket-id', (id) => {
             this.socketId = id;
         });
-        this.socket.on('progress', (progress, youtubeUrl, thumbnail, title, description, index) => {
+        this.socket.on('progress', (progress, youtubeUrl, thumbnail, title, description, index, socketId) => {
+            if (this.socketId !== socketId) {return;}
             this.startConvertion = false;
             console.log('progress', progress);
             console.log('youtubeUrl', youtubeUrl);
@@ -96,7 +97,8 @@ export class YoutubeDownloaderComponent implements OnInit {
             this.list.push(listItem);
             this.stopLoader();
         });
-        this.socket.on('item-progress', (progress, index, chunkData) => {
+        this.socket.on('item-progress', (progress, index, socketId) => {
+            if (this.socketId !== socketId) {return;}
             console.log('item-index', index, progress + '%');
             // console.log('item-progress*************', progress);
             // console.log('this.list.length', this.list.length);
@@ -107,12 +109,14 @@ export class YoutubeDownloaderComponent implements OnInit {
             }
             this.updateItemProgress(index, progress);
         });
-        this.socket.on('item-convert', (index) => {
+        this.socket.on('item-convert', (index, socketId) => {
+            if (this.socketId !== socketId) {return;}
             console.log('item-convert*************', index);
             const ele = $('.item-' + (index - 1))[0];
             this.setItemAsConverting(index);
         });
-        this.socket.on('item-failed', (index, chunkData) => {
+        this.socket.on('item-failed', (index, socketId) => {
+            if (this.socketId !== socketId) {return;}
             this.failedItems++;
             console.log('item-failed*************', index);
             // console.log('this.list.length', this.list.length);
@@ -123,7 +127,8 @@ export class YoutubeDownloaderComponent implements OnInit {
             }
             this.setItemAsFailed(index);
         });
-        this.socket.on('item-success', (index, chunkData) => {
+        this.socket.on('item-success', (index, socketId) => {
+            if (this.socketId !== socketId) {return;}
             if (this.list[index - 1] && !this.list[index - 1].failed) {
                 this.successItems++;
                 console.log('item-success*************', index);
@@ -136,11 +141,13 @@ export class YoutubeDownloaderComponent implements OnInit {
                 this.setItemAsSuccess(index);
             }
         })
-        this.socket.on('all-failed', (data) => {
+        this.socket.on('all-failed', (data, socketId) => {
+            if (this.socketId !== socketId) {return;}
             console.log('all-failed');
             alert('all list failed downloading');
         })
-        this.socket.on('all-files-failed', (data) => {
+        this.socket.on('all-files-failed', (data, socketId) => {
+            if (this.socketId !== socketId) {return;}
             console.log('all-files-failed', data);
                 // const listItemMap = [];
                 // for (const i in data) {
@@ -148,7 +155,8 @@ export class YoutubeDownloaderComponent implements OnInit {
                 // }
                 // console.log('listItemMap', listItemMap);
         })
-        this.socket.on('starting-zip', () => {
+        this.socket.on('starting-zip', (socketId) => {
+            if (this.socketId !== socketId) {return;}
             console.log('zip- start*************', );
             this.startingZip = true;
             setTimeout(() => {
@@ -156,22 +164,27 @@ export class YoutubeDownloaderComponent implements OnInit {
                 this.scrollToElement(el);
             });
         });
-        this.socket.on('zip-progress', (progress) => {
+        this.socket.on('zip-progress', (progress, socketId) => {
+            if (this.socketId !== socketId) {return;}
             console.log('zip- progress*************', progress);
             this.zipProgress = progress;
         });
-        this.socket.on('zip-end', (progress) => {
+        this.socket.on('zip-end', (progress, socketId) => {
+            if (this.socketId !== socketId) {return;}
             console.log('zip- end*************', progress);
             this.zipProgress = 100;
             this.stopTimer();
             this.resetAutoScrolling();
         });
-        this.socket.on('download-url', (url) => {
+        this.socket.on('download-url', (url, socketId) => {
+            if (this.socketId !== socketId) {return;}
             // window.location.href = url;
             this.unSetOnBeforeUnloadEvent();
+            this.stopTimer();
             this.startDownload(url);
         });
-        this.socket.on('failed', (err) => {
+        this.socket.on('failed', (err, socketId) => {
+            if (this.socketId !== socketId) {return;}
             // window.location.href = url;
             console.log('err', err)
             alert(err)
@@ -364,7 +377,7 @@ export class YoutubeDownloaderComponent implements OnInit {
     scrollToElement(el): void {
         if (this.autoScrolling) {
             // el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            $('html, body').animate({
+            $('html, body').stop().animate({
                 scrollTop: $(el).offset().top
             }, 500);
         }
