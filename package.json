@@ -31,7 +31,7 @@
         "core-js": "^2.5.4",
         "cors": "^2.8.5",
         "cron": "^1.7.2",
-        "express": "^4.16.4",
+        "express": "^4.17.3",
         "express-session": "^1.16.1",
         "ffmpeg": "0.0.4",
         "fs-extra": "^8.0.1",
